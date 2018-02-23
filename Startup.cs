@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using MyApp.Data;
 using Microsoft.AspNetCore.DataProtection;
 using System.IO;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
+
 
 namespace MyApp
 {
@@ -25,9 +27,20 @@ namespace MyApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var dbUri = new Uri(Configuration["DATABASE_URL"]);
+            var userInfoComponents = dbUri.UserInfo.Split(':');
+
+            var userName = userInfoComponents.First();
+            var password = userInfoComponents.Last();
+            var host = dbUri.Host;
+            var database = dbUri.PathAndQuery.TrimStart('/');
+
+            var connectionString = string.Format("Server={0};Database={1};Username={2};Password={3}", host, database, userName, password);
+
             services.AddMvc();
             services.AddDbContext<MyAppContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(
+                    connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
