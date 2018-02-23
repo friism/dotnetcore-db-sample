@@ -7,11 +7,10 @@ RUN dotnet restore -r linux-x64
 
 COPY . ./
 
-RUN dotnet publish -c Debug -o out -r linux-x64
+RUN dotnet publish -c Release -o out -r linux-x64 /p:TrimUnusedDependencies=true /p:RootPackageReference=false
 
-FROM microsoft/dotnet:2.0-runtime-stretch
+FROM microsoft/dotnet:2.0-runtime-deps-stretch
 
 WORKDIR /app
 COPY --from=builder /app/out .
-# ENV ASPNETCORE_URLS=http://+:80
-CMD ASPNETCORE_URLS=http://+:$PORT dotnet MyApp.dll
+CMD ASPNETCORE_URLS=http://+:$PORT ./MyApp
