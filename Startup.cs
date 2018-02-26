@@ -27,20 +27,13 @@ namespace MyApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var dbUri = new Uri(Configuration["DATABASE_URL"]);
-            var userInfoComponents = dbUri.UserInfo.Split(':');
-
-            var userName = userInfoComponents.First();
-            var password = userInfoComponents.Last();
-            var host = dbUri.Host;
-            var database = dbUri.PathAndQuery.TrimStart('/');
-
-            var connectionString = string.Format("Server={0};Database={1};Username={2};Password={3}", host, database, userName, password);
-
             services.AddMvc();
             services.AddDbContext<MyAppContext>(options =>
-                options.UseNpgsql(
-                    connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
+                options.UseSqlServer(
+                    Configuration["CONNECTION_STRING"], sqlOptions => sqlOptions.EnableRetryOnFailure())
+                // options.UseNpgsql(
+                //     GetNpgsqlConnectionString(), sqlOptions => sqlOptions.EnableRetryOnFailure())
+            );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -64,8 +57,19 @@ namespace MyApp
                 var context = serviceScope.ServiceProvider.GetRequiredService<MyAppContext>();
                 context.Database.EnsureCreated();
             }
+        }
 
-            
+        private string GetNpgsqlConnectionString()
+        {
+            var dbUri = new Uri(Configuration["DATABASE_URL"]);
+            var userInfoComponents = dbUri.UserInfo.Split(':');
+
+            var userName = userInfoComponents.First();
+            var password = userInfoComponents.Last();
+            var host = dbUri.Host;
+            var database = dbUri.PathAndQuery.TrimStart('/');
+
+            return string.Format("Server={0};Database={1};Username={2};Password={3}", host, database, userName, password);
         }
     }
 }
