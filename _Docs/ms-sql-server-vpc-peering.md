@@ -21,7 +21,7 @@ This section covers setting up a VPC with an AWS RDS MS SQL Server. You can skip
 1. Select Microsoft SQL Server. Express Edition is fine for testing
 1. Complete the wizard. You don't have to make the RDS database publicly available
 
-![](/i/rds-network-security.png "RDS database can be private")
+![](i/rds-network-security.png "RDS database can be private")
 
 ## Peer VPC and Heroku Private Space
 
@@ -29,7 +29,7 @@ If you don't already have a Heroku Private Space create one. [Heroku Enterprise]
 
 Follow the [Heroku Private Space Peering guide](https://devcenter.heroku.com/articles/private-space-peering). Don't forget to set up routes. Finally, configure your VPC security group to allow ingress traffic from your Heroku dynos to the SQL Server instance.
 
-![](/i/modify-security-group.png "Security group configuration")
+![](i/modify-security-group.png "Security group configuration")
 
 ## Deploy the app
 
@@ -49,7 +49,7 @@ git push heroku master
 
 You also need to add a config var with the connection string for your Microsoft SQL Server. You can find the endpoint hostname in the RDS settings.
 
-![](/i/aws-rds-endpoint.png "AWS RDS endpoint hostname")
+![](i/aws-rds-endpoint.png "AWS RDS endpoint hostname")
 
 This example uses the RDS master DB instance user to connect (you provided the password for that user when creating the RDS instance) but you can use other users too:
 
