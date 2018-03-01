@@ -11,29 +11,26 @@ using MyApp.Data;
 using Microsoft.AspNetCore.DataProtection;
 using System.IO;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
-
+using Microsoft.Extensions.Logging;
 
 namespace MyApp
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(ILoggerFactory loggerFactory, IConfiguration configuration)
         {
+            _logger = loggerFactory.CreateLogger<Startup>();
             Configuration = configuration;
         }
 
         public IConfiguration Configuration { get; }
+        private ILogger _logger;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddDbContext<MyAppContext>(options =>
-                options.UseSqlServer(
-                    Configuration["CONNECTION_STRING"], sqlOptions => sqlOptions.EnableRetryOnFailure())
-                // options.UseNpgsql(
-                //     GetNpgsqlConnectionString(), sqlOptions => sqlOptions.EnableRetryOnFailure())
-            );
+            services.AddDbContext<MyAppContext>(options => GetDbConnection(options));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,9 +56,30 @@ namespace MyApp
             }
         }
 
-        private string GetNpgsqlConnectionString()
+        private DbContextOptionsBuilder GetDbConnection(DbContextOptionsBuilder options)
         {
-            var dbUri = new Uri(Configuration["DATABASE_URL"]);
+            var connectionString = Configuration["CONNECTION_STRING"];
+            if (!string.IsNullOrEmpty(connectionString))
+            {
+                _logger.LogDebug("Found CONNECTION_STRING, using SQL Server");
+                return options.UseSqlServer(
+                    connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure());
+            }
+
+            var pgDbUrl = Configuration["DATABASE_URL"];
+            if (!string.IsNullOrEmpty(pgDbUrl))
+            {
+                _logger.LogDebug("Found DATABASE_URL, using PostgreSQL");
+                return options.UseNpgsql(
+                    ParseNpgsqlConnectionString(pgDbUrl), sqlOptions => sqlOptions.EnableRetryOnFailure());
+            }
+
+            throw new ArgumentException("No database configuration found");
+        }
+
+        private string ParseNpgsqlConnectionString(string databaseUrl)
+        {
+            var dbUri = new Uri(databaseUrl);
             var userInfoComponents = dbUri.UserInfo.Split(':');
 
             var userName = userInfoComponents.First();
