@@ -87,7 +87,7 @@ namespace MyApp
             var host = dbUri.Host;
             var database = dbUri.PathAndQuery.TrimStart('/');
 
-            return string.Format("Server={0};Database={1};Username={2};Password={3};SSL Mode=Require", host, database, userName, password);
+            return string.Format("Server={0};Database={1};Username={2};Password={3};SSL Mode=Require;Trust Server Certificate=true", host, database, userName, password);
         }
     }
 }
